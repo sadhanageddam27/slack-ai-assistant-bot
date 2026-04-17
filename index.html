@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Slack AI Assistant Bot | Sadhana Geddam</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #0f1117;
+  --bg2:     #161b27;
+  --bg3:     #1c2333;
+  --border:  rgba(255,255,255,0.07);
+  --b2:      rgba(255,255,255,0.12);
+  --slack:   #4a154b;
+  --green:   #2eb67d;
+  --yellow:  #ecb22e;
+  --blue:    #36c5f0;
+  --red:     #e01e5a;
+  --accent:  #36c5f0;
+  --text:    #cbd5e1;
+  --muted:   #4b5563;
+  --head:    #f1f5f9;
+  --mono:    'JetBrains Mono', monospace;
+  --sans:    'Plus Jakarta Sans', sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.8;overflow-x:hidden}
+::selection{background:rgba(54,197,240,0.2);color:var(--blue)}
+
+/* SUBTLE BG */
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(74,21,75,0.15),transparent);pointer-events:none;z-index:0}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:900;height:54px;display:flex;align-items:center;padding:0 2rem;gap:2rem;background:rgba(15,17,23,0.9);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+.brand{font-family:var(--sans);font-size:14px;font-weight:700;color:var(--head);margin-right:auto;display:flex;align-items:center;gap:10px}
+.slack-icon{width:22px;height:22px;display:grid;grid-template-columns:1fr 1fr;gap:2px}
+.si{border-radius:2px}
+nav a{color:var(--muted);text-decoration:none;font-family:var(--mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;transition:color .2s}
+nav a:hover{color:var(--blue)}
+
+/* HERO */
+.hero{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:6rem 2rem 3rem;display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center}
+.hero-left{}
+.hero-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--blue);margin-bottom:1.25rem;display:flex;align-items:center;gap:8px}
+.dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:blink 1.5s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+h1{font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:700;color:var(--head);line-height:1.15;margin-bottom:1.25rem;letter-spacing:-0.02em}
+.hero-desc{color:#64748b;font-size:14px;max-width:420px;line-height:1.75;font-weight:400;margin-bottom:2rem}
+.hero-badges{display:flex;gap:8px;flex-wrap:wrap}
+.hb{font-family:var(--mono);font-size:10px;padding:4px 12px;border-radius:3px;border:1px solid;letter-spacing:0.06em}
+.hb-green{color:var(--green);border-color:rgba(46,182,125,0.25);background:rgba(46,182,125,0.07)}
+.hb-blue{color:var(--blue);border-color:rgba(54,197,240,0.25);background:rgba(54,197,240,0.07)}
+.hb-yellow{color:var(--yellow);border-color:rgba(236,178,46,0.25);background:rgba(236,178,46,0.07)}
+
+/* SLACK MOCKUP */
+.slack-mockup{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;font-family:var(--sans)}
+.sm-header{background:var(--slack);padding:.75rem 1rem;display:flex;align-items:center;gap:8px}
+.sm-channel{color:rgba(255,255,255,0.9);font-size:13px;font-weight:600}
+.sm-status{color:rgba(255,255,255,0.5);font-size:12px;margin-left:auto}
+.sm-body{padding:1rem}
+.msg{display:flex;gap:10px;margin-bottom:1rem}
+.avatar{width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;font-weight:600}
+.msg-content{}
+.msg-name{font-size:13px;font-weight:600;color:var(--head);margin-bottom:2px}
+.msg-name .ts{font-weight:400;font-size:11px;color:var(--muted);margin-left:8px}
+.msg-text{font-size:13px;color:#94a3b8;line-height:1.5}
+.msg-text code{background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:11px;color:var(--blue)}
+.bot-block{background:var(--bg3);border-left:3px solid var(--green);border-radius:0 6px 6px 0;padding:.75rem 1rem;margin-top:6px;font-size:13px}
+.bb-title{font-weight:600;color:var(--head);margin-bottom:6px;font-size:13px}
+.bb-item{color:#94a3b8;padding:3px 0;display:flex;gap:8px;align-items:flex-start}
+.bb-item::before{content:'•';color:var(--green);flex-shrink:0}
+
+/* MAIN */
+main{max-width:960px;margin:0 auto;padding:3rem 2rem 6rem;position:relative;z-index:1}
+section{margin-bottom:5rem}
+.sh{display:flex;align-items:center;gap:12px;margin-bottom:2rem;padding-bottom:1rem;border-bottom:1px solid var(--border)}
+.sn{font-family:var(--mono);font-size:9px;color:var(--blue);letter-spacing:0.15em;text-transform:uppercase;background:rgba(54,197,240,0.07);border:1px solid rgba(54,197,240,0.2);padding:3px 8px;border-radius:2px}
+h2{font-size:1.3rem;font-weight:700;color:var(--head);letter-spacing:-0.01em}
+h3{font-family:var(--mono);font-size:10px;color:var(--blue);letter-spacing:0.12em;text-transform:uppercase;margin:2rem 0 .75rem}
+p{color:#64748b;font-weight:400;margin-bottom:1rem}
+
+/* COMMAND CARDS */
+.cmd-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1.5rem}
+.cmd-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:1.25rem;transition:border-color .3s,transform .2s}
+.cmd-card:hover{border-color:var(--b2);transform:translateY(-2px)}
+.cmd-name{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--blue);margin-bottom:.5rem}
+.cmd-desc{font-size:13px;color:#64748b;line-height:1.55}
+.cmd-example{margin-top:10px;background:var(--bg3);border-radius:4px;padding:6px 10px;font-family:var(--mono);font-size:11px;color:#94a3b8}
+
+/* FLOW */
+.flow{display:flex;align-items:center;gap:0;margin-bottom:1.5rem;overflow-x:auto;padding-bottom:4px}
+.flow-step{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:.9rem 1.1rem;min-width:140px;flex-shrink:0}
+.fs-icon{font-size:18px;margin-bottom:6px}
+.fs-title{font-family:var(--mono);font-size:11px;color:var(--head);font-weight:500;margin-bottom:3px}
+.fs-desc{font-size:11px;color:var(--muted);line-height:1.4}
+.flow-arrow{color:var(--muted);font-family:var(--mono);font-size:14px;padding:0 6px;flex-shrink:0}
+
+/* CODE */
+.code-block{background:var(--bg3);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:1.5rem}
+.cb-header{padding:.6rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.cb-dots{display:flex;gap:5px}
+.cbd{width:10px;height:10px;border-radius:50%}
+.cb-title{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:auto}
+.cb-body{padding:1rem 1.25rem;font-family:var(--mono);font-size:12px;line-height:2;overflow-x:auto}
+.ck{color:#f97316}
+.cs{color:#a3e635}
+.cf{color:var(--blue)}
+.cc{color:var(--muted)}
+.cn{color:#c084fc}
+
+/* FILE TREE */
+.tree{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:1.25rem 1.5rem;font-family:var(--mono);font-size:12px;line-height:2.2;margin-bottom:1.5rem}
+.tr{color:var(--blue)}
+.tf{color:#94a3b8}
+.tc{color:var(--muted);font-size:11px}
+
+/* CARD */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:1.25rem 1.5rem;margin-bottom:1rem}
+.card p{margin:0;color:#64748b}
+
+/* METRICS */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border-radius:8px;overflow:hidden;margin-bottom:2rem;border:1px solid var(--border)}
+.mc{background:var(--bg2);padding:1.25rem;text-align:center}
+.mv{font-family:var(--mono);font-size:1.6rem;font-weight:700;display:block;margin-bottom:4px}
+.ml{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase}
+
+/* TAGS */
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin:1rem 0}
+.tag{font-family:var(--mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;padding:3px 10px;border-radius:3px;border:1px solid}
+.tg{color:var(--green);border-color:rgba(46,182,125,0.2);background:rgba(46,182,125,0.06)}
+.tb{color:var(--blue);border-color:rgba(54,197,240,0.2);background:rgba(54,197,240,0.06)}
+.ty{color:var(--yellow);border-color:rgba(236,178,46,0.2);background:rgba(236,178,46,0.06)}
+.tr2{color:var(--red);border-color:rgba(224,30,90,0.2);background:rgba(224,30,90,0.06)}
+
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:#1e293b;border-radius:2px}
+
+footer{border-top:1px solid var(--border);padding:2rem;text-align:center;font-family:var(--mono);font-size:11px;color:var(--muted);position:relative;z-index:1}
+footer a{color:var(--blue);text-decoration:none}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.hero{animation:fadeUp .5s ease both}
+
+@media(max-width:768px){
+  .hero{grid-template-columns:1fr;gap:2rem}
+  .cmd-grid{grid-template-columns:1fr}
+  .metrics{grid-template-columns:1fr 1fr}
+  nav a{display:none}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="brand">
+    <div class="slack-icon">
+      <div class="si" style="background:#e01e5a;width:10px;height:10px"></div>
+      <div class="si" style="background:#36c5f0;width:10px;height:10px"></div>
+      <div class="si" style="background:#2eb67d;width:10px;height:10px"></div>
+      <div class="si" style="background:#ecb22e;width:10px;height:10px"></div>
+    </div>
+    Slack AI Assistant Bot
+  </span>
+  <a href="#commands">commands</a>
+  <a href="#architecture">architecture</a>
+  <a href="#code">code</a>
+  <a href="#setup">setup</a>
+</nav>
+
+<div class="hero">
+  <div class="hero-left">
+    <div class="hero-eyebrow"><div class="dot"></div>Python · Slack API · LLM · REST</div>
+    <h1>AI-Powered<br>Slack Bot</h1>
+    <p class="hero-desc">LLM inference directly inside Slack — natural language queries, real-time alerts, and text summarization via slash commands. Built with Slack Bolt SDK and an OpenAI-compatible backend.</p>
+    <div class="hero-badges">
+      <span class="hb hb-green">/ask</span>
+      <span class="hb hb-blue">/summarize</span>
+      <span class="hb hb-yellow">/alert</span>
+      <span class="hb hb-green">@mention</span>
+    </div>
+  </div>
+
+  <!-- SLACK MOCKUP -->
+  <div class="slack-mockup">
+    <div class="sm-header">
+      <div style="width:20px;height:20px;background:rgba(255,255,255,0.2);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px">#</div>
+      <span class="sm-channel">engineering</span>
+      <span class="sm-status">● Online</span>
+    </div>
+    <div class="sm-body">
+      <div class="msg">
+        <div class="avatar" style="background:#4a154b;color:white">S</div>
+        <div class="msg-content">
+          <div class="msg-name">sadhana <span class="ts">2:14 PM</span></div>
+          <div class="msg-text"><code>/ask</code> What are the benefits of microservices?</div>
+        </div>
+      </div>
+      <div class="msg">
+        <div class="avatar" style="background:#2eb67d;color:white;font-size:11px">BOT</div>
+        <div class="msg-content">
+          <div class="msg-name">AI Assistant <span class="ts">2:14 PM</span></div>
+          <div class="bot-block">
+            <div class="bb-title">🔍 Query: What are the benefits of microservices?</div>
+            <div class="bb-item">Independent deployment and scaling per service</div>
+            <div class="bb-item">Technology flexibility across teams</div>
+            <div class="bb-item">Fault isolation — one failure doesn't cascade</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<main>
+
+<!-- TAGS -->
+<div class="tags">
+  <span class="tag tg">Python</span>
+  <span class="tag tb">Slack Bolt SDK</span>
+  <span class="tag tb">Block Kit</span>
+  <span class="tag tg">LLM Inference</span>
+  <span class="tag ty">OpenAI API</span>
+  <span class="tag ty">Ollama</span>
+  <span class="tag tr2">Socket Mode</span>
+  <span class="tag tg">REST API</span>
+</div>
+
+<!-- COMMANDS -->
+<section id="commands">
+  <div class="sh"><span class="sn">01</span><h2>Slash Commands</h2></div>
+  <div class="cmd-grid">
+    <div class="cmd-card">
+      <div class="cmd-name" style="color:var(--blue)">/ask &lt;question&gt;</div>
+      <div class="cmd-desc">Send any natural language query to the LLM and get a formatted response posted back to the channel.</div>
+      <div class="cmd-example">/ask Explain Docker containers</div>
+    </div>
+    <div class="cmd-card">
+      <div class="cmd-name" style="color:var(--yellow)">/alert &lt;message&gt;</div>
+      <div class="cmd-desc">Post a structured alert notification to the current channel with sender context and timestamp.</div>
+      <div class="cmd-example">/alert Production API is down</div>
+    </div>
+    <div class="cmd-card">
+      <div class="cmd-name" style="color:var(--green)">/summarize &lt;text&gt;</div>
+      <div class="cmd-desc">Summarize any block of text into 2–3 concise bullet points using LLM inference.</div>
+      <div class="cmd-example">/summarize &lt;paste meeting notes&gt;</div>
+    </div>
+  </div>
+  <div class="card">
+    <p><strong style="color:var(--head)">@BotMention</strong> — Mention the bot directly in any channel to ask a question without using a slash command. Responds inline with the same formatted Block Kit output.</p>
+  </div>
+</section>
+
+<!-- ARCHITECTURE -->
+<section id="architecture">
+  <div class="sh"><span class="sn">02</span><h2>How It Works</h2></div>
+
+  <div class="metrics">
+    <div class="mc"><span class="mv" style="color:var(--blue)">3</span><span class="ml">slash commands</span></div>
+    <div class="mc"><span class="mv" style="color:var(--green)">1</span><span class="ml">mention handler</span></div>
+    <div class="mc"><span class="mv" style="color:var(--yellow)">500</span><span class="ml">max tokens/response</span></div>
+    <div class="mc"><span class="mv" style="color:var(--red)">0</span><span class="ml">public server needed</span></div>
+  </div>
+
+  <h3>Request Flow</h3>
+  <div class="flow">
+    <div class="flow-step">
+      <div class="fs-icon">💬</div>
+      <div class="fs-title">User types /ask</div>
+      <div class="fs-desc">in any Slack channel</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">
+      <div class="fs-icon">⚡</div>
+      <div class="fs-title">Socket Mode</div>
+      <div class="fs-desc">delivers event to app.py</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">
+      <div class="fs-icon">🧠</div>
+      <div class="fs-title">ask_llm()</div>
+      <div class="fs-desc">POST to LLM endpoint</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">
+      <div class="fs-icon">🎨</div>
+      <div class="fs-title">Block Kit</div>
+      <div class="fs-desc">formats response</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step">
+      <div class="fs-icon">✅</div>
+      <div class="fs-title">Posted back</div>
+      <div class="fs-desc">to Slack channel</div>
+    </div>
+  </div>
+
+  <h3>Project Structure</h3>
+  <div class="tree">
+    <div>slack-ai-assistant-bot/</div>
+    <div>&nbsp;&nbsp;<span class="tr">├──</span> <span class="tf">app.py</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tc"># Slack Bolt app — slash commands + event handlers</span></div>
+    <div>&nbsp;&nbsp;<span class="tr">├──</span> <span class="tf">llm.py</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="tc"># LLM inference wrapper — swappable backend</span></div>
+    <div>&nbsp;&nbsp;<span class="tr">├──</span> <span class="tf">requirements.txt</span> &nbsp;<span class="tc"># Python dependencies</span></div>
+    <div>&nbsp;&nbsp;<span class="tr">├──</span> <span class="tf">.env.example</span> &nbsp;&nbsp;&nbsp;<span class="tc"># Environment variable template</span></div>
+    <div>&nbsp;&nbsp;<span class="tr">└──</span> <span class="tf">README.md</span></div>
+  </div>
+</section>
+
+<!-- CODE -->
+<section id="code">
+  <div class="sh"><span class="sn">03</span><h2>Key Code</h2></div>
+
+  <h3>app.py — /ask command handler</h3>
+  <div class="code-block">
+    <div class="cb-header">
+      <div class="cb-dots">
+        <div class="cbd" style="background:#ff5f56"></div>
+        <div class="cbd" style="background:#ffbd2e"></div>
+        <div class="cbd" style="background:#27c93f"></div>
+      </div>
+      <span class="cb-title">app.py</span>
+    </div>
+    <div class="cb-body">
+<span class="cc">@app.command("/ask")</span><br>
+<span class="ck">def</span> <span class="cf">handle_ask</span>(ack, respond, command):<br>
+&nbsp;&nbsp;ack() &nbsp;<span class="cc"># acknowledge immediately</span><br>
+&nbsp;&nbsp;user_query = command.get(<span class="cs">"text"</span>, <span class="cs">""</span>).strip()<br>
+&nbsp;&nbsp;respond(<span class="cs">f":hourglass: Thinking about: *{user_query}*..."</span>)<br>
+&nbsp;&nbsp;answer = <span class="cf">ask_llm</span>(user_query)<br>
+&nbsp;&nbsp;respond(blocks=[<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<span class="cs">"type"</span>: <span class="cs">"section"</span>, <span class="cs">"text"</span>: {<span class="cs">"type"</span>: <span class="cs">"mrkdwn"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cs">"text"</span>: <span class="cs">f":mag: *Query:* {user_query}"</span>}},<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<span class="cs">"type"</span>: <span class="cs">"divider"</span>},<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<span class="cs">"type"</span>: <span class="cs">"section"</span>, <span class="cs">"text"</span>: {<span class="cs">"type"</span>: <span class="cs">"mrkdwn"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cs">"text"</span>: <span class="cs">f":robot_face: *Answer:*\n{answer}"</span>}}<br>
+&nbsp;&nbsp;])
+    </div>
+  </div>
+
+  <h3>llm.py — swappable LLM backend</h3>
+  <div class="code-block">
+    <div class="cb-header">
+      <div class="cb-dots">
+        <div class="cbd" style="background:#ff5f56"></div>
+        <div class="cbd" style="background:#ffbd2e"></div>
+        <div class="cbd" style="background:#27c93f"></div>
+      </div>
+      <span class="cb-title">llm.py</span>
+    </div>
+    <div class="cb-body">
+<span class="ck">def</span> <span class="cf">ask_llm</span>(prompt: <span class="cn">str</span>) -> <span class="cn">str</span>:<br>
+&nbsp;&nbsp;api_key = os.environ.get(<span class="cs">"OPENAI_API_KEY"</span>, <span class="cs">""</span>)<br>
+&nbsp;&nbsp;base_url = os.environ.get(<span class="cs">"LLM_BASE_URL"</span>, <span class="cs">"https://api.openai.com/v1"</span>)<br>
+&nbsp;&nbsp;model = os.environ.get(<span class="cs">"LLM_MODEL"</span>, <span class="cs">"gpt-3.5-turbo"</span>)<br>
+<br>
+&nbsp;&nbsp;payload = {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="cs">"model"</span>: model,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="cs">"messages"</span>: [{<span class="cs">"role"</span>: <span class="cs">"system"</span>, <span class="cs">"content"</span>: <span class="cs">"You are a helpful Slack assistant."</span>},<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<span class="cs">"role"</span>: <span class="cs">"user"</span>, <span class="cs">"content"</span>: prompt}],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="cs">"max_tokens"</span>: <span class="cn">500</span>, <span class="cs">"temperature"</span>: <span class="cn">0.7</span><br>
+&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;<span class="ck">return</span> requests.post(f<span class="cs">"{base_url}/chat/completions"</span>, ...) <span class="cc"># → parsed response</span>
+    </div>
+  </div>
+</section>
+
+<!-- SETUP -->
+<section id="setup">
+  <div class="sh"><span class="sn">04</span><h2>Setup and Usage</h2></div>
+
+  <div class="code-block">
+    <div class="cb-header">
+      <div class="cb-dots">
+        <div class="cbd" style="background:#ff5f56"></div>
+        <div class="cbd" style="background:#ffbd2e"></div>
+        <div class="cbd" style="background:#27c93f"></div>
+      </div>
+      <span class="cb-title">terminal</span>
+    </div>
+    <div class="cb-body">
+<span class="cc"># Clone and install</span><br>
+git clone https://github.com/sadhanageddam27/slack-ai-assistant-bot.git<br>
+pip install -r requirements.txt<br><br>
+<span class="cc"># Configure credentials</span><br>
+cp .env.example .env<br>
+<span class="cc"># Add SLACK_BOT_TOKEN, SLACK_APP_TOKEN, OPENAI_API_KEY</span><br><br>
+<span class="cc"># Run</span><br>
+python app.py
+    </div>
+  </div>
+
+  <div class="card">
+    <p><strong style="color:var(--head)">Local LLM with Ollama</strong> — Run fully offline by setting <code style="background:rgba(255,255,255,0.06);color:var(--blue);padding:1px 6px;border-radius:3px;font-family:var(--mono);font-size:12px">LLM_BASE_URL=http://localhost:11434/v1</code> and <code style="background:rgba(255,255,255,0.06);color:var(--blue);padding:1px 6px;border-radius:3px;font-family:var(--mono);font-size:12px">LLM_MODEL=llama3</code> in your <code style="background:rgba(255,255,255,0.06);color:var(--blue);padding:1px 6px;border-radius:3px;font-family:var(--mono);font-size:12px">.env</code> file. No OpenAI API key needed.</p>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  Sadhana Geddam &nbsp;·&nbsp; Slack AI Assistant Bot &nbsp;·&nbsp; Python · Slack Bolt · LLM &nbsp;·&nbsp;
+  <a href="https://github.com/sadhanageddam27/slack-ai-assistant-bot">github.com/sadhanageddam27</a>
+</footer>
+
+</body>
+</html>
